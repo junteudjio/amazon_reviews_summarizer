@@ -31,5 +31,8 @@ mkdir -p $DATA_DIR
 rm -rf $DATA_DIR
 python2 $CODE_DIR/preprocessing/dataset_preprocess.py
 
+# create the vocabulary file
+python2 $CODE_DIR/utils/vocab_utils.py
+
 # Download distributed word representations
 python2 $CODE_DIR/preprocessing/dwr.py

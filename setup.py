@@ -14,7 +14,7 @@ with open('LICENSE') as f:
 setup(
     name='ars',
     version='0.1.0',
-    description='A deep learning text sumarizer for Amazon reviews in tensorflow.',
+    description='A deep learning text summarizer for Amazon reviews in tensorflow.',
     long_description=readme,
     author='Junior Teudjio Mbativou',
     author_email='teudjiombativou@gmail.com',
@@ -27,7 +27,6 @@ setup(
         'matplotlib',
         'scipy',
         'numpy',
-        'pandas',
         'tensorflow>=1.4.0',
         'joblib',
         'nltk>=3.2.2',

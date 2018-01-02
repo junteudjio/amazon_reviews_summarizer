@@ -17,7 +17,6 @@ from six.moves.urllib.request import urlretrieve
 from nltk.corpus import stopwords as nltk_stopwords
 import tensorflow as tf
 
-
 from ars.code.preprocessing import contractions as _contractions
 from ars.code.utils import misc_utils as utils
 
@@ -56,33 +55,38 @@ def _setup_args():
     parser.add_argument("--replace_contractions", default=True, type=bool)
     return parser.parse_args()
 
-def _reporthook(t):
-  """https://github.com/tqdm/tqdm"""
-  last_b = [0]
 
-  def inner(b=1, bsize=1, tsize=None):
-    """
-    b: int, optional
-        Number of blocks just transferred [default: 1].
-    bsize: int, optional
-        Size of each block (in tqdm units) [default: 1].
-    tsize: int, optional
-        Total size (in tqdm units). If [default: None] remains unchanged.
-    """
-    if tsize is not None:
-        t.total = tsize
-    t.update((b - last_b[0]) * bsize)
-    last_b[0] = b
-  return inner
+def _reporthook(t):
+    """https://github.com/tqdm/tqdm"""
+    last_b = [0]
+
+    def inner(b=1, bsize=1, tsize=None):
+        """
+        b: int, optional
+            Number of blocks just transferred [default: 1].
+        bsize: int, optional
+            Size of each block (in tqdm units) [default: 1].
+        tsize: int, optional
+            Total size (in tqdm units). If [default: None] remains unchanged.
+        """
+        if tsize is not None:
+            t.total = tsize
+        t.update((b - last_b[0]) * bsize)
+        last_b[0] = b
+
+    return inner
+
 
 def _check_if_not_kaggle_url(func):
     def decorator(*pargs, **kwargs):
         url = pargs[0]
         downloaded = os.path.exists(os.path.join(pargs[2], pargs[1]))
         not_kaggle_url = not 'kaggle' in url
-        assert downloaded or not_kaggle_url, 'For kaggle dataset download them with browser in dir: %s' %(pargs[2])
+        assert downloaded or not_kaggle_url, 'For kaggle dataset download them with browser in dir: %s' % (pargs[2])
         return func(*pargs, **kwargs)
+
     return decorator
+
 
 @_check_if_not_kaggle_url
 def maybe_download(url, filename, prefix, num_bytes=None):
@@ -94,13 +98,14 @@ def maybe_download(url, filename, prefix, num_bytes=None):
         try:
             print("Downloading file {}...".format(url + filename))
             with tqdm(unit='B', unit_scale=True, miniters=1, desc=filename) as t:
-                local_filename, _ = urlretrieve(url + filename, os.path.join(prefix,filename), _reporthook=_reporthook(t))
+                local_filename, _ = urlretrieve(url + filename, os.path.join(prefix, filename),
+                                                _reporthook=_reporthook(t))
         except AttributeError as e:
             print("An error occurred when downloading the file! Please get the dataset using a browser.")
             raise e
     # We have a downloaded file
     # Check the stats and make sure they are ok
-    file_stats = os.stat(os.path.join(prefix,filename))
+    file_stats = os.stat(os.path.join(prefix, filename))
     if num_bytes is None or file_stats.st_size == num_bytes:
         print("File {} successfully loaded".format(filename))
     else:
@@ -108,18 +113,19 @@ def maybe_download(url, filename, prefix, num_bytes=None):
 
     return local_filename
 
-def tokenize(sentence):
 
+def tokenize(sentence):
     # Format words and remove unwanted characters
-    sentence = sentence.lower()
+    # sentence = sentence.lower()
     sentence = re.sub(u'https?:\/\/.*[\r\n]*', '', sentence, flags=re.MULTILINE)
     sentence = re.sub(u'\<a href', ' ', sentence)
     sentence = re.sub(u'&amp;', '', sentence)
-    #sentence = re.sub(u'[_"\-;%()|+&=*%.,!?:#$@\[\]/]', ' ', sentence)
+    # sentence = re.sub(u'[_"\-;%()|+&=*%.,!?:#$@\[\]/]', ' ', sentence)
     sentence = re.sub(u'<br />', ' ', sentence)
     sentence = re.sub(u'\'', ' ', sentence)
     tokens = [token.replace(u"``", u'"').replace(u"''", u'"') for token in nltk.word_tokenize(sentence)]
     return tokens
+
 
 def clean_sentence(sentence_str, contractions_dict=None, stopwords_set=None):
     if contractions_dict:
@@ -136,22 +142,22 @@ def clean_sentence(sentence_str, contractions_dict=None, stopwords_set=None):
     if stopwords_set:
         sentence = [w for w in sentence if not w in stopwords_set]
 
-
     return u' '.join(sentence)
 
-def _save_files(prefix, tier, indices):
-  with open(os.path.join(prefix, tier + '.review'), 'wb') as review_file,  \
-     open(os.path.join(prefix, tier + '.summary'), 'wb') as summary_file:
 
-    print('Creating %s split ...' %tier)
-    for i in tqdm(indices, total=len(indices)):
-      review_file.write(linecache.getline(os.path.join(prefix, 'all.review'), i))
-      summary_file.write(linecache.getline(os.path.join(prefix, 'all.summary'), i))
+def _save_files(prefix, tier, indices):
+    with open(os.path.join(prefix, tier + '.review'), 'wb') as review_file, \
+            open(os.path.join(prefix, tier + '.summary'), 'wb') as summary_file:
+        print('Creating %s split ...' % tier)
+        for i in tqdm(indices, total=len(indices)):
+            review_file.write(linecache.getline(os.path.join(prefix, 'all.review'), i))
+            summary_file.write(linecache.getline(os.path.join(prefix, 'all.summary'), i))
+
 
 def _split_tier(prefix, percents, shuffle=False):
     total_percentages = percents['train'] + percents['val'] + percents['test']
     assert 0.0 <= (1.0 - total_percentages) <= 1e-3, 'spliting percentages must sum to 1.0'
-    
+
     review_filename = os.path.join(prefix, 'all' + '.review')
     # Get the number of lines
     with open(review_filename) as current_file:
@@ -185,12 +191,12 @@ def _read_clean_save_data_from_csv(csvfilepath, save_dir, replace_contractions, 
     stopwords = set(nltk_stopwords.words("english")) if remove_stopwords else None
     contractions = _contractions.contractions if replace_contractions else None
 
-    with codecs.getreader("utf-8")(tf.gfile.GFile(csvfilepath, mode="rb")) as raw_csvfile,\
-         codecs.getwriter("utf-8")(tf.gfile.GFile(save_review_path, mode="wb")) as review_file,\
-         codecs.getwriter("utf-8")(tf.gfile.GFile(save_summary_path, mode="wb")) as summary_file:
+    with codecs.getreader("utf-8")(tf.gfile.GFile(csvfilepath, mode="rb")) as raw_csvfile, \
+            codecs.getwriter("utf-8")(tf.gfile.GFile(save_review_path, mode="wb")) as review_file, \
+            codecs.getwriter("utf-8")(tf.gfile.GFile(save_summary_path, mode="wb")) as summary_file:
 
         reader = csv.DictReader(raw_csvfile, delimiter=',')
-        print ('Cleaning raw dataset ...')
+        print('Cleaning raw dataset ...')
         for row in tqdm(reader, total=raw_file_numlines):
             review = clean_sentence(row['Text'], contractions, stopwords)
             summary = clean_sentence(row['Summary'], contractions, stopwords)
@@ -205,7 +211,7 @@ if __name__ == '__main__':
     download_prefix = args.download_prefix
     data_prefix = args.data_prefix
     percents = {
-        'train':args.train_percentage,
+        'train': args.train_percentage,
         'val': args.val_percentage,
         'test': args.test_percentage,
     }
@@ -219,8 +225,8 @@ if __name__ == '__main__':
         os.makedirs(data_prefix)
 
     # Download and extract the raw dataset
-    raw_data_zip = maybe_download(raw_dataset_base_url, raw_filename+'.zip', download_prefix, raw_filesize_expected)
-    raw_data_zip_ref = zipfile.ZipFile(os.path.join(download_prefix, raw_filename+'.zip'), 'r')
+    raw_data_zip = maybe_download(raw_dataset_base_url, raw_filename + '.zip', download_prefix, raw_filesize_expected)
+    raw_data_zip_ref = zipfile.ZipFile(os.path.join(download_prefix, raw_filename + '.zip'), 'r')
     raw_data_zip_ref.extractall(download_prefix)
     raw_data_zip_ref.close()
 

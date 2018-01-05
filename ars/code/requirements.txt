@@ -1,0 +1,11 @@
+nose
+sphinx
+numpy
+scipy
+matplotlib
+tensorflow >= 1.4.0
+joblib
+nltk >= 3.2.2
+tqdm
+pyprind
+

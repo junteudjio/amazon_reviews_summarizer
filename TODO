@@ -1,0 +1,5 @@
+- add support for GNMT attention
+- add tests
+- add ROUGE metric summaries
+- unit tests
+- train on aws gpus

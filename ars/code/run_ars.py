@@ -93,7 +93,7 @@ def add_arguments(parser):
 
   # optimizer
   parser.add_argument("--optimizer", type=str, default="adam", help="sgd | adam")
-  parser.add_argument("--learning_rate", type=float, default=0.001,
+  parser.add_argument("--learning_rate", type=float, default=0.0001,
                       help="Learning rate. Adam: 0.001 | 0.0001")
   parser.add_argument("--warmup_steps", type=int, default=0,
                       help="How many steps we inverse-decay learning.")
@@ -186,7 +186,7 @@ def add_arguments(parser):
       maximum decoding length.\
       """)
 
-  # Default settings works well (rarely need to change)
+  # Default settings works well
   parser.add_argument("--unit_type", type=str, default="gru",
                       help="lstm | gru | layer_norm_lstm | nas")
   parser.add_argument("--forget_bias", type=float, default=1.0,
@@ -195,15 +195,19 @@ def add_arguments(parser):
                       help="Dropout rate (not keep_prob)")
   parser.add_argument("--max_gradient_norm", type=float, default=5.0,
                       help="Clip gradients to this norm.")
+
   parser.add_argument("--batch_size", type=int, default=128, help="Batch size.")
 
-  parser.add_argument("--steps_per_stats", type=int, default=5,
+  parser.add_argument("--steps_per_stats", type=int, default=20,
                       help=("How many training steps to do per stats logging."
                             "Save checkpoint every 10x steps_per_stats"))
   parser.add_argument("--max_train", type=int, default=0,
                       help="Limit on the size of training data (0: no limit).")
   parser.add_argument("--num_buckets", type=int, default=5,
                       help="Put data into similar-length buckets.")
+
+
+
 
   # SPM
   parser.add_argument("--subword_option", type=str, default="",
